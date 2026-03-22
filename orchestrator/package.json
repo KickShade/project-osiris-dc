@@ -1,0 +1,32 @@
+{
+  "name": "orchestrator",
+  "version": "1.0.0",
+  "description": "The Orchestrator acts as the central gateway and data manager for the Distributed File Storage System. It is responsible for client authentication, file transformation (sharding and reassembly), and coordinating communication between the Metadata Service and the Storage Nodes.",
+  "main": "app.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "distributed-systems",
+    "sharding",
+    "orchestrator"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.13.6",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "multer": "^2.1.1",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
