@@ -1,0 +1,30 @@
+services:
+  mongodb_service:
+    image: mongo:latest
+    container_name: auth_db_container
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: secure_password_here
+      MONGO_INITDB_DATABASE: auth_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - persistent_mongo_data:/data/db
+    networks:
+      - internal_auth_net   #dynamic isolated bridge network
+
+  # application container will eventually go here
+  # auth_app_service:
+  #   image: app_image
+  #   networks:
+  #     - internal_auth_net
+  #   depends_on:
+  #     - mongodb_service
+
+networks:
+  internal_auth_net:
+    driver: bridge
+
+volumes:
+  persistent_mongo_data:
