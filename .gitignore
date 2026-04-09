@@ -1,4 +1,4 @@
 node_modules/
 .env
-*.txt
+notes.txt
 symmToken.py
