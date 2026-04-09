@@ -8,7 +8,7 @@ app = FastAPI()
 
 # Cryptographic prerequisites 
 #In production, to be injected via environment variables
-SECRET_KEY = "your-highly-entropic-super-secret-key"
+SECRET_KEY = "super-secret-key"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

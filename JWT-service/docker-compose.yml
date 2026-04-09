@@ -1,24 +1,28 @@
 services:
   mongodb_service:
-    image: mongo:7.0
-    container_name: auth_db_container
-    restart: unless-stopped
+    image: mongo:7.0    #don't use latest cause it could break with a new version
+    container_name: auth_db_container   #just some name
+    restart: unless-stopped       
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: secure_password_here
+      MONGO_INITDB_ROOT_PASSWORD: pizza
       MONGO_INITDB_DATABASE: auth_db
     volumes:
       - persistent_mongo_data:/data/db
     networks:
-      - internal_auth_net   #dynamic isolated bridge network
+      - internal_auth_net   #connects to other container through internal route
 
-  # application container will eventually go here
-  # auth_app_service:
-  #   image: app_image
-  #   networks:
-  #     - internal_auth_net
-  #   depends_on:
-  #     - mongodb_service
+  auth_app_service:
+    build: .  # . as in current directory
+    container_name: auth_api_container
+    restart: unless-stopped
+    ports:
+      - "8000:8000" # Exposes the API to local frontend/browser
+      # we'll need to change this somehow - this should be accessible from another node
+    networks:
+      - internal_auth_net # Binds to the same network as MongoDB
+    depends_on:
+      - mongodb_service # Ensures the DB boots before the API attempts to connect
 
 networks:
   internal_auth_net:

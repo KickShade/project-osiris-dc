@@ -2,11 +2,11 @@ import os
 import motor.motor_asyncio
 from passlib.context import CryptContext
 from fastapi import HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel      # to validate shape of incoming JSON payloads
 
 # 1. Database Instantiation
 # Ingest the Atlas connection string via environment variables to preclude credential leakage.
-MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://<username>:<password>@cluster0.mongodb.net/?retryWrites=true&w=majority")
+MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://admin:pizza@cluster0.mongodb.net/?retryWrites=true&w=majority")
 
 # Instantiate the asynchronous Motor client
 client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URI)

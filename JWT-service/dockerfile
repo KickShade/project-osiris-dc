@@ -1,0 +1,19 @@
+#slim cause its lightweight or something
+FROM python:3.11-slim      
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Install the requisite dependencies
+# (Assume you have a requirements.txt with fastapi, uvicorn, motor, passlib, bcrypt, pyjwt)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy your application code and the seed script into the container
+COPY . .
+
+# Expose the port FastAPI will bind to
+EXPOSE 8000
+
+# The command to boot the server using Uvicorn (an ASGI web server)
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
