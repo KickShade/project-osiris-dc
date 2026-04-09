@@ -16,4 +16,5 @@ COPY . .
 EXPOSE 8000
 
 # The command to boot the server using Uvicorn (an ASGI web server)
+#remem: 0.0.0.0 is a wildcard - aka bind whatever IP we're using
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
