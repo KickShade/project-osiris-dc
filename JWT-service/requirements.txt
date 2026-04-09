@@ -1,5 +1,6 @@
 fastapi
 uvicorn
 motor
-passlib[bcrypt]
+passlib
+bcrypt==3.2.2
 PyJWT
