@@ -7,7 +7,7 @@ import jwt
 import motor.motor_asyncio
 from passlib.context import CryptContext
 
-# 1. Application & Cryptographic Instantiation
+#Application & Cryptographic Instantiation
 app = FastAPI()
 
 permitted_origins = [
@@ -27,20 +27,20 @@ app.add_middleware(
 )
 
 # In a ubiquitous production environment, these must be injected via environment variables
-SECRET_KEY = os.getenv("JWT_SECRET", "super-secret-key")
+SECRET_KEY = os.getenv("JWT_SECRET", "pizza")       #pizza is the secret_key
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 # Establish the hashing schema (Bcrypt inherently manages salt entropy)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# Database Topological Configuration
-# Leveraging Docker's internal DNS: connecting to 'mongodb_service' on port 27017
-# using the root credentials defined in your docker-compose.yml.
+#Database Topological Configuration
+#docker's internal DNS: connecting to 'mongodb_service' on port 27017
+#using the root credentials defined in your docker-compose.yml.
 # (Note: In strict production, swap these for scoped application credentials).
 MONGO_URI = os.getenv(
     "MONGO_URI", 
-    "mongodb://admin:secure_password_here@mongodb_service:27017/"
+    "mongodb://admin:pizza@mongodb_service:27017/"
 )
 
 # Instantiate the asynchronous Motor client and bind to the specific database
@@ -59,11 +59,11 @@ class Token(BaseModel):
 
 # Cryptographic Utility Functions
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Juxtaposes the plaintext string against the persisted cryptographic hash."""
+    # Juxtaposes the plaintext string against the persisted cryptographic hash.
     return pwd_context.verify(plain_password, hashed_password)
 
 def create_access_token(data: dict, expires_delta: timedelta) -> str:
-    """Mints the JWT with specified claims and a Time-To-Live (TTL)."""
+    #Mints the JWT with specified claims and a Time-To-Live (TTL).
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + expires_delta
     
@@ -93,9 +93,8 @@ async def authenticate_user(credentials: UserCredentials) -> bool:
 
 @app.post("/token", response_model=Token)
 async def login_for_access_token(credentials: UserCredentials):
-    """The primary ingress endpoint for credential verification and token minting."""
-    
-    # Crucially, we must 'await' the coroutine
+    # The primary ingress endpoint for credential verification and token minting
+    #crucially, we must 'await' the coroutine
     is_authenticated = await authenticate_user(credentials)
     
     if not is_authenticated:

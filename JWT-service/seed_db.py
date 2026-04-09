@@ -50,3 +50,6 @@ async def provision_test_subjects():
 if __name__ == "__main__":
     # Execute the asynchronous coroutine
     asyncio.run(provision_test_subjects())
+
+# def main():
+#     asyncio.run(provision_test_subjects())
