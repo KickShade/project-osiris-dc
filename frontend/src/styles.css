@@ -1,0 +1,157 @@
+:root {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #1f2937;
+  background: linear-gradient(135deg, #d7eef6 0%, #f3f7ff 42%, #fff4e5 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+.page {
+  min-height: 100vh;
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.panel {
+  width: min(960px, 100%);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(40, 70, 120, 0.14);
+  padding: 24px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 30px;
+}
+
+.subtitle {
+  margin-top: 6px;
+  color: #4b5563;
+}
+
+form {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+section {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px;
+  background: #ffffff;
+}
+
+h2 {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+input,
+select,
+textarea {
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+textarea {
+  resize: vertical;
+}
+
+.buttonRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+button {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  background: #1d4ed8;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+button.secondary {
+  background: #f3f4f6;
+  color: #111827;
+  border: 1px solid #d1d5db;
+}
+
+.status {
+  min-height: 22px;
+  font-weight: 600;
+}
+
+.fileList {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.fileCard {
+  display: grid;
+  gap: 6px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.fileCard span {
+  color: #4b5563;
+  font-size: 13px;
+}
+
+pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: #111827;
+  color: #f9fafb;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 0;
+  overflow: auto;
+}
+
+@media (max-width: 680px) {
+  .page {
+    padding: 10px;
+  }
+
+  .panel {
+    padding: 14px;
+  }
+}

@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const { v4: uuidv4 } = require('uuid');
+const { randomUUID } = require('crypto');
 const { splitFile } = require('../lib/sharding');
 const nodeClient = require('../lib/nodeClient');
 const metadataClient = require('../lib/metadataClient');
 
 // Configure multer to store upload in a memory buffer for immediate sharding
-const storage = multer.memoryStore();
+const storage = multer.memoryStorage(); 
 const upload = multer({ storage: storage });
 
 /**
@@ -20,7 +20,7 @@ router.post('/', upload.single('file'), async (req, res, next) => {
             return res.status(400).json({ error: 'No file provided in the request.' });
         }
 
-        const fileId = uuidv4();
+        const fileId = randomUUID();
         const fileName = req.file.originalname;
         const mimeType = req.file.mimetype;
         const fileBuffer = req.file.buffer;

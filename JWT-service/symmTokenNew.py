@@ -11,9 +11,11 @@ from passlib.context import CryptContext
 app = FastAPI()
 
 permitted_origins = [
-    "http://192.168.1.100",        #THIS IS EXAMPLE IP OF FRONTEND
-    "http://192.168.1.100:3000",   #PORT OF FRONTEND
-    # "http://localhost",          #only if you gonna deploy frontend locally
+"http://192.168.1.100",
+"http://192.168.1.100:3000",
+"http://localhost",
+"http://localhost:5173",
+"http://127.0.0.1:5173"
 ]
 
 
