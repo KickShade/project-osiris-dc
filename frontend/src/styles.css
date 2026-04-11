@@ -1,7 +1,7 @@
 :root {
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  color: #1f2937;
-  background: linear-gradient(135deg, #d7eef6 0%, #f3f7ff 42%, #fff4e5 100%);
+  font-family: "Inter", "Roboto", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #111827;
+  background: #f4f6fb;
 }
 
 * {
@@ -11,58 +11,97 @@
 body {
   margin: 0;
   min-height: 100vh;
+  color: #111827;
+  background: #f4f6fb;
 }
 
 .page {
   min-height: 100vh;
-  padding: 24px;
+  padding: 32px 20px;
   display: flex;
   justify-content: center;
   align-items: flex-start;
 }
 
 .panel {
-  width: min(960px, 100%);
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(8px);
-  border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(40, 70, 120, 0.14);
-  padding: 24px;
+  width: min(1180px, 100%);
+  padding: 0;
+  background: transparent;
 }
 
 h1 {
-  margin: 0;
-  font-size: 30px;
+  margin: 0 0 24px 0;
+  font-size: clamp(1.75rem, 2.2vw, 2.3rem);
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
 }
 
-.subtitle {
-  margin-top: 6px;
-  color: #4b5563;
+.appTitle {
+  text-align: left;
 }
 
-form {
-  display: grid;
-  gap: 16px;
-  margin-top: 16px;
-}
-
-section {
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 14px;
-  background: #ffffff;
+.centeredTitle {
+  text-align: center;
 }
 
 h2 {
-  margin: 0 0 12px 0;
-  font-size: 18px;
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 650;
+  color: #111827;
+}
+
+.view {
+  display: grid;
+  gap: 20px;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #e9edf5;
+  border-radius: 12px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+  padding: 24px;
+}
+
+.loginView {
+  width: min(560px, 100%);
+  justify-self: center;
+}
+
+.loginCard {
+  display: grid;
+  gap: 16px;
+}
+
+.stackForm {
+  display: grid;
+  gap: 14px;
+}
+
+.dashboardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+
+.mutedText {
+  margin: 6px 0 0 0;
+  color: #6b7280;
+  font-size: 0.95rem;
 }
 
 label {
   display: grid;
-  gap: 6px;
-  font-size: 14px;
-  margin-bottom: 12px;
+  gap: 8px;
+  font-size: 0.92rem;
+  color: #374151;
+}
+
+.labelText {
+  color: #374151;
 }
 
 input,
@@ -75,13 +114,20 @@ button {
 input,
 select,
 textarea {
-  border: 1px solid #d1d5db;
+  border: 1px solid #d5dbea;
   border-radius: 10px;
   padding: 10px 12px;
+  background: #ffffff;
+  color: #111827;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-textarea {
-  resize: vertical;
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.16);
 }
 
 .buttonRow {
@@ -91,67 +137,162 @@ textarea {
 }
 
 button {
-  border: none;
+  border: 1px solid transparent;
   border-radius: 10px;
   padding: 10px 16px;
-  cursor: pointer;
-  background: #1d4ed8;
+  background: #4f46e5;
   color: #ffffff;
   font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  box-shadow: 0 6px 14px rgba(79, 70, 229, 0.25);
+}
+
+button:hover:not(:disabled) {
+  background: #4338ca;
+  transform: translateY(-1px);
 }
 
 button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 button.secondary {
-  background: #f3f4f6;
-  color: #111827;
-  border: 1px solid #d1d5db;
+  background: #eef1f7;
+  color: #1f2937;
+  border-color: #d7dce8;
+  box-shadow: none;
 }
 
-.status {
-  min-height: 22px;
-  font-weight: 600;
+button.secondary:hover:not(:disabled) {
+  background: #e5e9f3;
 }
 
-.fileList {
+.uploadCard {
   display: grid;
-  gap: 10px;
-  margin-top: 12px;
+  gap: 16px;
 }
 
-.fileCard {
+.sectionTitleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.uploadControls {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.fileInputGroup {
+  min-width: 280px;
+  flex: 1;
+}
+
+.filesCard {
   display: grid;
-  gap: 6px;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 10px;
+  gap: 14px;
 }
 
-.fileCard span {
-  color: #4b5563;
-  font-size: 13px;
-}
-
-pre {
-  white-space: pre-wrap;
-  word-break: break-word;
-  background: #111827;
-  color: #f9fafb;
-  border-radius: 10px;
-  padding: 12px;
-  margin: 0;
+.tableWrap {
+  border: 1px solid #e8ecf4;
+  border-radius: 12px;
   overflow: auto;
 }
 
-@media (max-width: 680px) {
+.filesTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 680px;
+}
+
+.filesTable th,
+.filesTable td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #eef1f6;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.filesTable th {
+  font-size: 0.82rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #6b7280;
+  background: #f8f9fc;
+}
+
+.filesTable tbody tr:hover {
+  background: #fafbff;
+}
+
+.filesTable tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.fileNameCell {
+  color: #111827;
+  font-weight: 600;
+}
+
+.fileIdCell {
+  color: #6b7280;
+  font-size: 0.88rem;
+  word-break: break-all;
+}
+
+.actionColumn {
+  width: 160px;
+  text-align: right;
+}
+
+.quickDownloadCard {
+  display: grid;
+  gap: 12px;
+}
+
+.status {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid #dbe2f0;
+  background: #f8faff;
+  color: #334155;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+@media (max-width: 900px) {
   .page {
-    padding: 10px;
+    padding: 20px 12px;
   }
 
-  .panel {
-    padding: 14px;
+  .card {
+    padding: 18px;
+  }
+
+  .dashboardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .uploadControls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .fileInputGroup {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .sectionTitleRow {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

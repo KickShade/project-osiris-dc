@@ -1,4 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+const JWT_LOGIN_URL = "http://localhost:8000/token";
+const ORCHESTRATOR_UPLOAD_URL = "http://localhost:3000/upload";
+const ORCHESTRATOR_FILES_URL = "http://localhost:3000/files";
+const ORCHESTRATOR_DOWNLOAD_BASE_URL = "http://localhost:3000/download";
 
 function getErrorMessage(payload, fallbackMessage) {
   if (!payload) {
@@ -38,19 +43,14 @@ function getFilenameFromDisposition(headerValue, fallbackName) {
 }
 
 export default function App() {
-  const [jwtServiceUrl, setJwtServiceUrl] = useState("http://localhost:8000");
-  const [orchestratorUrl, setOrchestratorUrl] = useState("http://localhost:3000");
-
   const [username, setUsername] = useState("test_client");
   const [password, setPassword] = useState("shirts");
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [downloadFileId, setDownloadFileId] = useState("");
 
-  const [token, setToken] = useState(() => localStorage.getItem("jwt_access_token") || "");
-  const [jwtResponseText, setJwtResponseText] = useState("");
-  const [uploadResponseText, setUploadResponseText] = useState("");
-  const [filesResponseText, setFilesResponseText] = useState("");
+  const [token, setToken] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [files, setFiles] = useState([]);
   const [statusMessage, setStatusMessage] = useState("");
 
@@ -59,20 +59,28 @@ export default function App() {
   const [isListing, setIsListing] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
+  useEffect(() => {
+    const savedToken = localStorage.getItem("access_token");
+    if (savedToken) {
+      setToken(savedToken);
+      setIsAuthenticated(true);
+    }
+  }, []);
+
   function saveToken(accessToken) {
-    localStorage.setItem("jwt_access_token", accessToken);
+    localStorage.setItem("access_token", accessToken);
     setToken(accessToken);
   }
 
   function clearToken() {
-    localStorage.removeItem("jwt_access_token");
-    localStorage.removeItem("jwt_response");
+    localStorage.removeItem("access_token");
     setToken("");
-    setStatusMessage("Token cleared from localStorage.");
+    setIsAuthenticated(false);
+    setStatusMessage("");
   }
 
   function getTokenOrThrow() {
-    const stored = localStorage.getItem("jwt_access_token") || token;
+    const stored = localStorage.getItem("access_token") || token;
     if (!stored) {
       throw new Error("Missing token. Login first.");
     }
@@ -87,7 +95,7 @@ export default function App() {
       setIsLoggingIn(true);
 
       const loginPayload = { username, password };
-      const response = await fetch(`${jwtServiceUrl}/token`, {
+      const response = await fetch(JWT_LOGIN_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -106,10 +114,11 @@ export default function App() {
       }
 
       saveToken(accessToken);
-      localStorage.setItem("jwt_response", JSON.stringify(payload));
+      console.log("JWT Response", payload);
+      console.log("Saved Token", accessToken);
 
-      setJwtResponseText(JSON.stringify(payload, null, 2));
-      setStatusMessage("Login successful. Token saved in localStorage.");
+      setIsAuthenticated(true);
+      setStatusMessage("");
     } catch (error) {
       setStatusMessage(error.message || "Login failed.");
     } finally {
@@ -132,7 +141,7 @@ export default function App() {
       const formData = new FormData();
       formData.append("file", selectedFile);
 
-      const response = await fetch(`${orchestratorUrl}/upload`, {
+      const response = await fetch(ORCHESTRATOR_UPLOAD_URL, {
         method: "POST",
         headers: {
           Authorization: savedToken
@@ -145,7 +154,8 @@ export default function App() {
         throw new Error(getErrorMessage(payload, "File upload failed."));
       }
 
-      setUploadResponseText(JSON.stringify(payload, null, 2));
+      console.log("Upload Response", payload);
+      alert("File Upload Successful!");
       setStatusMessage("Upload successful.");
     } catch (error) {
       setStatusMessage(error.message || "File upload failed.");
@@ -161,7 +171,7 @@ export default function App() {
       setIsListing(true);
       const savedToken = getTokenOrThrow();
 
-      const response = await fetch(`${orchestratorUrl}/files`, {
+      const response = await fetch(ORCHESTRATOR_FILES_URL, {
         method: "GET",
         headers: {
           Authorization: savedToken
@@ -175,7 +185,7 @@ export default function App() {
 
       const listedFiles = Array.isArray(payload?.files) ? payload.files : [];
       setFiles(listedFiles);
-      setFilesResponseText(JSON.stringify(payload, null, 2));
+      console.log("Files Response", payload);
       setStatusMessage(`Fetched ${listedFiles.length} file(s).`);
     } catch (error) {
       setStatusMessage(error.message || "Could not fetch files.");
@@ -196,7 +206,7 @@ export default function App() {
       setIsDownloading(true);
       const savedToken = getTokenOrThrow();
 
-      const response = await fetch(`${orchestratorUrl}/download/${encodeURIComponent(targetFileId)}`, {
+      const response = await fetch(`${ORCHESTRATOR_DOWNLOAD_BASE_URL}/${encodeURIComponent(targetFileId)}`, {
         method: "GET",
         headers: {
           Authorization: savedToken
@@ -222,6 +232,7 @@ export default function App() {
       tempLink.remove();
       window.URL.revokeObjectURL(blobUrl);
 
+      alert("File Downloaded Successfully!");
       setStatusMessage(`Download started: ${downloadName}`);
     } catch (error) {
       setStatusMessage(error.message || "File download failed.");
@@ -230,41 +241,19 @@ export default function App() {
     }
   }
 
-  return (
-    <div className="page">
-      <div className="panel">
-        <h1>Distributed Storage Frontend</h1>
-        <p className="subtitle">Login, upload, list, and download workflow.</p>
-
-        <section>
-          <h2>Service Targets</h2>
-          <label>
-            JWT Service URL
-            <input
-              value={jwtServiceUrl}
-              onChange={(event) => setJwtServiceUrl(event.target.value)}
-              placeholder="http://localhost:8000"
-            />
-          </label>
-          <label>
-            Orchestrator URL
-            <input
-              value={orchestratorUrl}
-              onChange={(event) => setOrchestratorUrl(event.target.value)}
-              placeholder="http://localhost:3000"
-            />
-          </label>
-        </section>
-
-        <form onSubmit={handleLogin}>
-          <section>
-            <h2>Task 1: Login and Token Storage</h2>
+  function renderLoginView() {
+    return (
+      <div className="view loginView">
+        <section className="card loginCard">
+          <h2>Welcome Back</h2>
+          <p className="mutedText">Sign in to access your distributed storage dashboard.</p>
+          <form onSubmit={handleLogin} className="stackForm">
             <label>
               Username
               <input
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
-                placeholder="alice"
+                placeholder="test_client"
               />
             </label>
             <label>
@@ -273,73 +262,106 @@ export default function App() {
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder="password123"
+                placeholder="shirts"
               />
             </label>
             <div className="buttonRow">
               <button type="submit" disabled={isLoggingIn}>
                 {isLoggingIn ? "Logging in..." : "Login"}
               </button>
-              <button type="button" className="secondary" onClick={clearToken}>
-                Clear Token
-              </button>
             </div>
-          </section>
-        </form>
+          </form>
+          {statusMessage && <p className="status">{statusMessage}</p>}
+        </section>
+      </div>
+    );
+  }
 
-        <form onSubmit={handleUpload}>
-          <section>
-            <h2>Task 2: Upload File</h2>
-            <label>
-              File
+  function renderDashboardView() {
+    return (
+      <div className="view dashboardView">
+        <section className="card dashboardHeader">
+          <div>
+            <h2>Storage Dashboard</h2>
+            <p className="mutedText">Upload, browse, and download files from your distributed cluster.</p>
+          </div>
+          <button type="button" className="secondary" onClick={clearToken}>
+            Logout
+          </button>
+        </section>
+
+        <form onSubmit={handleUpload} className="card uploadCard">
+          <div className="sectionTitleRow">
+            <h2>Upload File</h2>
+          </div>
+          <div className="uploadControls">
+            <label className="fileInputGroup">
+              <span className="labelText">Choose file</span>
               <input
                 type="file"
                 onChange={(event) => setSelectedFile(event.target.files?.[0] || null)}
               />
             </label>
-            <div className="buttonRow">
-              <button type="submit" disabled={isUploading}>
-                {isUploading ? "Uploading..." : "Upload to /upload"}
-              </button>
-            </div>
-          </section>
-        </form>
-
-        <section>
-          <h2>Task 3: List Files</h2>
-          <div className="buttonRow">
-            <button type="button" onClick={handleListFiles} disabled={isListing}>
-              {isListing ? "Loading..." : "Fetch /files"}
+            <button type="submit" disabled={isUploading}>
+              {isUploading ? "Uploading..." : "Upload File"}
             </button>
           </div>
-          {files.length > 0 && (
-            <div className="fileList">
-              {files.map((file) => {
-                const fileId = file.fileId || file._id || "";
-                const fileName = file.fileName || "Unnamed file";
-                return (
-                  <div className="fileCard" key={fileId || fileName}>
-                    <strong>{fileName}</strong>
-                    <span>{fileId || "No fileId in payload"}</span>
-                    {fileId && (
-                      <button
-                        type="button"
-                        className="secondary"
-                        onClick={() => handleDownloadFile(fileId)}
-                        disabled={isDownloading}
-                      >
-                        Download
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
+        </form>
+
+        <section className="card filesCard">
+          <div className="sectionTitleRow">
+            <h2>Files</h2>
+            <button type="button" onClick={handleListFiles} disabled={isListing}>
+              {isListing ? "Loading..." : "Refresh Files"}
+            </button>
+          </div>
+
+          {files.length > 0 ? (
+            <div className="tableWrap">
+              <table className="filesTable">
+                <thead>
+                  <tr>
+                    <th>File Name</th>
+                    <th>File ID</th>
+                    <th className="actionColumn">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {files.map((file) => {
+                    const fileId = file.fileId || file._id || "";
+                    const fileName = file.fileName || "Unnamed file";
+
+                    return (
+                      <tr key={fileId || fileName}>
+                        <td className="fileNameCell">{fileName}</td>
+                        <td className="fileIdCell">{fileId || "No fileId in payload"}</td>
+                        <td className="actionColumn">
+                          {fileId ? (
+                            <button
+                              type="button"
+                              className="secondary"
+                              onClick={() => handleDownloadFile(fileId)}
+                              disabled={isDownloading}
+                            >
+                              Download
+                            </button>
+                          ) : (
+                            <span className="mutedText">Unavailable</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
+          ) : (
+            <p className="mutedText">No files loaded yet. Click "Refresh Files" to fetch data.</p>
           )}
         </section>
 
-        <section>
-          <h2>Task 4: Download File by ID</h2>
+        <section className="card quickDownloadCard">
+          <h2>Direct Download by File ID</h2>
           <label>
             File ID
             <input
@@ -354,32 +376,22 @@ export default function App() {
               onClick={() => handleDownloadFile()}
               disabled={isDownloading}
             >
-              {isDownloading ? "Downloading..." : "Download from /download/:fileId"}
+              {isDownloading ? "Downloading..." : "Download"}
             </button>
           </div>
         </section>
+        {statusMessage && <p className="status">{statusMessage}</p>}
+      </div>
+    );
+  }
 
-        <p className="status">{statusMessage}</p>
-
-        <section>
-          <h2>Saved Token</h2>
-          <pre>{token || "No token saved."}</pre>
-        </section>
-
-        <section>
-          <h2>JWT Response</h2>
-          <pre>{jwtResponseText || "No login response yet."}</pre>
-        </section>
-
-        <section>
-          <h2>Upload Response</h2>
-          <pre>{uploadResponseText || "No upload response yet."}</pre>
-        </section>
-
-        <section>
-          <h2>Files Response</h2>
-          <pre>{filesResponseText || "No files response yet."}</pre>
-        </section>
+  return (
+    <div className="page">
+      <div className="panel">
+        <h1 className={`appTitle ${!isAuthenticated ? "centeredTitle" : ""}`}>
+          Distributed Storage System
+        </h1>
+        {!isAuthenticated ? renderLoginView() : renderDashboardView()}
       </div>
     </div>
   );
