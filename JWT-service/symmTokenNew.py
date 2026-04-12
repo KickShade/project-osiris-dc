@@ -30,7 +30,7 @@ app.add_middleware(
 
 # In a ubiquitous production environment, these must be injected via environment variables
 SECRET_KEY = os.getenv("JWT_SECRET", "pizza")       #pizza is the secret_key
-ALGORITHM = "HS256"
+ALGORITHM = "HS256"     #N-LINE  80
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 # Establish the hashing schema (Bcrypt inherently manages salt entropy)
