@@ -68,7 +68,27 @@ const fetchShard = async (shardId) => {
     }
 };
 
+/**
+ * Retrieves topology, node load, and recent shard event telemetry from the manager.
+ * @returns {Promise<Object>} Manager system status payload.
+ */
+const getSystemStatus = async () => {
+    if (!STORAGE_MANAGER_URL) {
+        throw new Error('STORAGE_MANAGER_URL is not configured in environment variables.');
+    }
+
+    try {
+        const response = await axios.get(`${STORAGE_MANAGER_URL}/system-status`, {
+            timeout: 10000
+        });
+        return response.data;
+    } catch (error) {
+        throw new Error(`Failed to retrieve manager system status: ${error.message}`);
+    }
+};
+
 module.exports = {
     sendToManager,
-    fetchShard
+    fetchShard,
+    getSystemStatus
 };

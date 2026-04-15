@@ -87,6 +87,42 @@ h2 {
   gap: 14px;
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.tabSwitcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f2f4fa;
+  border: 1px solid #dde3ef;
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.tabButton {
+  background: transparent;
+  color: #4b5563;
+  border: none;
+  box-shadow: none;
+  padding: 8px 12px;
+}
+
+.tabButton:hover:not(:disabled) {
+  background: #e5e9f5;
+  transform: none;
+}
+
+.tabButton.activeTab {
+  background: #4f46e5;
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.22);
+}
+
 .mutedText {
   margin: 6px 0 0 0;
   color: #6b7280;
@@ -257,6 +293,209 @@ button.secondary:hover:not(:disabled) {
   gap: 12px;
 }
 
+.systemHeaderCard {
+  display: grid;
+  gap: 10px;
+}
+
+.topologyGridCard {
+  display: grid;
+  gap: 18px;
+}
+
+.topologyGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.topologyCoreNode {
+  border: 1px solid #e4e8f3;
+  border-radius: 12px;
+  padding: 16px;
+  display: grid;
+  gap: 6px;
+  background: #fbfcff;
+}
+
+.topologyTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.topologyMeta {
+  font-size: 0.88rem;
+  color: #6b7280;
+}
+
+.orchestratorNode {
+  border-left: 4px solid #4f46e5;
+}
+
+.managerNode {
+  border-left: 4px solid #3b82f6;
+}
+
+.nodeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 14px;
+}
+
+.nodeCard {
+  border: 1px solid #e6ebf5;
+  border-radius: 12px;
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+  background: #ffffff;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.nodeCard h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #111827;
+}
+
+.nodeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.nodeBadge {
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  border: 1px solid transparent;
+}
+
+.nodeSubText {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.82rem;
+  word-break: break-all;
+}
+
+.loadBarTrack {
+  width: 100%;
+  height: 9px;
+  border-radius: 999px;
+  background: #eef2fb;
+  overflow: hidden;
+}
+
+.loadBarFill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #4f46e5 0%, #6366f1 100%);
+  border-radius: inherit;
+  transition: width 0.4s ease;
+}
+
+.nodeStatsRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: #475569;
+}
+
+.health-stable .nodeBadge {
+  background: #e8f9ef;
+  border-color: #bbebcd;
+  color: #166534;
+}
+
+.health-heavy_load .nodeBadge {
+  background: #fff4db;
+  border-color: #ffe1a8;
+  color: #92400e;
+}
+
+.health-offline .nodeBadge {
+  background: #f1f5f9;
+  border-color: #d9e2ee;
+  color: #64748b;
+}
+
+.health-heavy_load .loadBarFill {
+  background: linear-gradient(90deg, #f59e0b 0%, #ef4444 100%);
+}
+
+.activity-receiving_shard,
+.activity-sending_shard,
+.activity-recent_receive,
+.activity-recent_send {
+  animation: nodePulse 1.8s ease-in-out infinite;
+}
+
+.activity-receiving_shard {
+  border-color: #93c5fd;
+}
+
+.activity-sending_shard {
+  border-color: #86efac;
+}
+
+.eventFeedCard {
+  display: grid;
+  gap: 12px;
+}
+
+.eventFeedList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.eventItem {
+  border: 1px solid #e8edf6;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #fbfcff;
+}
+
+.eventTitleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.eventTime {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.eventMeta {
+  margin: 6px 0 0 0;
+  font-size: 0.82rem;
+  color: #64748b;
+  word-break: break-word;
+}
+
+@keyframes nodePulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.24);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(79, 70, 229, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+  }
+}
+
 .status {
   margin: 0;
   padding: 12px 14px;
@@ -279,6 +518,20 @@ button.secondary:hover:not(:disabled) {
   .dashboardHeader {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .headerActions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .tabSwitcher {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .topologyGrid {
+    grid-template-columns: 1fr;
   }
 
   .uploadControls {

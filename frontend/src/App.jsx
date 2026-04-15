@@ -4,6 +4,7 @@ const JWT_LOGIN_URL = "http://localhost:8000/token";
 const ORCHESTRATOR_UPLOAD_URL = "http://localhost:3000/upload";
 const ORCHESTRATOR_FILES_URL = "http://localhost:3000/files";
 const ORCHESTRATOR_DOWNLOAD_BASE_URL = "http://localhost:3000/download";
+const ORCHESTRATOR_SYSTEM_STATUS_URL = "http://localhost:3000/system-status";
 
 function getErrorMessage(payload, fallbackMessage) {
   if (!payload) {
@@ -52,12 +53,15 @@ export default function App() {
   const [token, setToken] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [files, setFiles] = useState([]);
+  const [systemStatus, setSystemStatus] = useState(null);
+  const [activeDashboardView, setActiveDashboardView] = useState("files");
   const [statusMessage, setStatusMessage] = useState("");
 
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isListing, setIsListing] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isSystemLoading, setIsSystemLoading] = useState(false);
 
   useEffect(() => {
     const savedToken = localStorage.getItem("access_token");
@@ -76,6 +80,8 @@ export default function App() {
     localStorage.removeItem("access_token");
     setToken("");
     setIsAuthenticated(false);
+    setSystemStatus(null);
+    setActiveDashboardView("files");
     setStatusMessage("");
   }
 
@@ -241,6 +247,161 @@ export default function App() {
     }
   }
 
+  async function fetchSystemStatus() {
+    const savedToken = localStorage.getItem("access_token") || token;
+    if (!savedToken) {
+      throw new Error("Missing token. Login first.");
+    }
+
+    const response = await fetch(ORCHESTRATOR_SYSTEM_STATUS_URL, {
+      method: "GET",
+      headers: {
+        Authorization: savedToken
+      }
+    });
+
+    const payload = await readResponsePayload(response);
+    if (!response.ok) {
+      throw new Error(getErrorMessage(payload, "Could not fetch system status."));
+    }
+
+    setSystemStatus(payload);
+  }
+
+  useEffect(() => {
+    if (!isAuthenticated || activeDashboardView !== "system") {
+      return undefined;
+    }
+
+    let isCancelled = false;
+
+    async function loadSystemStatus() {
+      try {
+        setIsSystemLoading(true);
+        await fetchSystemStatus();
+      } catch (error) {
+        if (!isCancelled) {
+          setStatusMessage(error.message || "Could not fetch system status.");
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsSystemLoading(false);
+        }
+      }
+    }
+
+    loadSystemStatus();
+    const intervalId = window.setInterval(loadSystemStatus, 3500);
+
+    return () => {
+      isCancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [isAuthenticated, activeDashboardView, token]);
+
+  function formatEventTitle(eventType) {
+    return String(eventType || "event")
+      .split("_")
+      .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+      .join(" ");
+  }
+
+  function renderSystemDashboardView() {
+    const topology = systemStatus?.topology;
+    const manager = topology?.manager;
+    const nodes = Array.isArray(topology?.nodes) ? topology.nodes : [];
+    const recentEvents = Array.isArray(systemStatus?.events) ? systemStatus.events : [];
+
+    return (
+      <>
+        <section className="card systemHeaderCard">
+          <div className="sectionTitleRow">
+            <h2>System Topology</h2>
+            <button
+              type="button"
+              onClick={() => fetchSystemStatus()}
+              disabled={isSystemLoading}
+            >
+              {isSystemLoading ? "Refreshing..." : "Refresh Status"}
+            </button>
+          </div>
+          <p className="mutedText">
+            Live view of orchestrator, manager balancing, node health, and shard traffic.
+          </p>
+        </section>
+
+        <section className="card topologyGridCard">
+          <div className="topologyGrid">
+            <article className="topologyCoreNode orchestratorNode">
+              <span className="topologyTitle">Orchestrator</span>
+              <span className="topologyMeta">Online</span>
+            </article>
+
+            <article className="topologyCoreNode managerNode">
+              <span className="topologyTitle">Node Manager</span>
+              <span className="topologyMeta">
+                Healthy: {manager?.healthyNodeCount ?? 0}/{manager?.totalNodeCount ?? 0}
+              </span>
+              <span className="topologyMeta">Avg Load: {manager?.averageLoad ?? 0}%</span>
+            </article>
+          </div>
+
+          <div className="nodeGrid">
+            {nodes.map((node) => {
+              const nodeClass = [
+                "nodeCard",
+                `health-${node.health || "offline"}`,
+                `activity-${node.activity || "idle"}`
+              ].join(" ");
+
+              return (
+                <article key={node.id || node.url} className={nodeClass}>
+                  <div className="nodeHeader">
+                    <h3>{node.name}</h3>
+                    <span className="nodeBadge">{String(node.health || "offline").replace("_", " ")}</span>
+                  </div>
+                  <p className="nodeSubText">{node.url}</p>
+                  <p className="nodeSubText">Activity: {String(node.activity || "idle").replace("_", " ")}</p>
+                  <div className="loadBarTrack" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={node.loadPercent || 0}>
+                    <span className="loadBarFill" style={{ width: `${node.loadPercent || 0}%` }} />
+                  </div>
+                  <div className="nodeStatsRow">
+                    <span>Load {node.loadPercent || 0}%</span>
+                    <span>Stores {node.totals?.stores ?? 0}</span>
+                    <span>Fetches {node.totals?.fetches ?? 0}</span>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="card eventFeedCard">
+          <h2>Recent Sharding / Recombination Events</h2>
+          {recentEvents.length > 0 ? (
+            <ul className="eventFeedList">
+              {recentEvents.map((event) => (
+                <li key={event.id} className="eventItem">
+                  <div className="eventTitleRow">
+                    <strong>{formatEventTitle(event.type)}</strong>
+                    <span className="eventTime">{new Date(event.timestamp).toLocaleTimeString()}</span>
+                  </div>
+                  <p className="eventMeta">
+                    {event.fileId ? `File: ${event.fileId}` : "File: n/a"}
+                    {event.shardId ? ` | Shard: ${event.shardId}` : ""}
+                    {event.nodeName ? ` | Node: ${event.nodeName}` : ""}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mutedText">No recent activity recorded yet.</p>
+          )}
+        </section>
+      </>
+    );
+  }
+
   function renderLoginView() {
     return (
       <div className="view loginView">
@@ -285,101 +446,125 @@ export default function App() {
             <h2>Storage Dashboard</h2>
             <p className="mutedText">Upload, browse, and download files from your distributed cluster.</p>
           </div>
-          <button type="button" className="secondary" onClick={clearToken}>
-            Logout
-          </button>
-        </section>
-
-        <form onSubmit={handleUpload} className="card uploadCard">
-          <div className="sectionTitleRow">
-            <h2>Upload File</h2>
-          </div>
-          <div className="uploadControls">
-            <label className="fileInputGroup">
-              <span className="labelText">Choose file</span>
-              <input
-                type="file"
-                onChange={(event) => setSelectedFile(event.target.files?.[0] || null)}
-              />
-            </label>
-            <button type="submit" disabled={isUploading}>
-              {isUploading ? "Uploading..." : "Upload File"}
-            </button>
-          </div>
-        </form>
-
-        <section className="card filesCard">
-          <div className="sectionTitleRow">
-            <h2>Files</h2>
-            <button type="button" onClick={handleListFiles} disabled={isListing}>
-              {isListing ? "Loading..." : "Refresh Files"}
-            </button>
-          </div>
-
-          {files.length > 0 ? (
-            <div className="tableWrap">
-              <table className="filesTable">
-                <thead>
-                  <tr>
-                    <th>File Name</th>
-                    <th>File ID</th>
-                    <th className="actionColumn">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {files.map((file) => {
-                    const fileId = file.fileId || file._id || "";
-                    const fileName = file.fileName || "Unnamed file";
-
-                    return (
-                      <tr key={fileId || fileName}>
-                        <td className="fileNameCell">{fileName}</td>
-                        <td className="fileIdCell">{fileId || "No fileId in payload"}</td>
-                        <td className="actionColumn">
-                          {fileId ? (
-                            <button
-                              type="button"
-                              className="secondary"
-                              onClick={() => handleDownloadFile(fileId)}
-                              disabled={isDownloading}
-                            >
-                              Download
-                            </button>
-                          ) : (
-                            <span className="mutedText">Unavailable</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+          <div className="headerActions">
+            <div className="tabSwitcher" role="tablist" aria-label="Dashboard Views">
+              <button
+                type="button"
+                className={`tabButton ${activeDashboardView === "files" ? "activeTab" : ""}`}
+                onClick={() => setActiveDashboardView("files")}
+              >
+                Files
+              </button>
+              <button
+                type="button"
+                className={`tabButton ${activeDashboardView === "system" ? "activeTab" : ""}`}
+                onClick={() => setActiveDashboardView("system")}
+              >
+                System Dashboard
+              </button>
             </div>
-          ) : (
-            <p className="mutedText">No files loaded yet. Click "Refresh Files" to fetch data.</p>
-          )}
-        </section>
-
-        <section className="card quickDownloadCard">
-          <h2>Direct Download by File ID</h2>
-          <label>
-            File ID
-            <input
-              value={downloadFileId}
-              onChange={(event) => setDownloadFileId(event.target.value)}
-              placeholder="paste fileId here"
-            />
-          </label>
-          <div className="buttonRow">
-            <button
-              type="button"
-              onClick={() => handleDownloadFile()}
-              disabled={isDownloading}
-            >
-              {isDownloading ? "Downloading..." : "Download"}
+            <button type="button" className="secondary" onClick={clearToken}>
+              Logout
             </button>
           </div>
         </section>
+
+        {activeDashboardView === "files" ? (
+          <>
+            <form onSubmit={handleUpload} className="card uploadCard">
+              <div className="sectionTitleRow">
+                <h2>Upload File</h2>
+              </div>
+              <div className="uploadControls">
+                <label className="fileInputGroup">
+                  <span className="labelText">Choose file</span>
+                  <input
+                    type="file"
+                    onChange={(event) => setSelectedFile(event.target.files?.[0] || null)}
+                  />
+                </label>
+                <button type="submit" disabled={isUploading}>
+                  {isUploading ? "Uploading..." : "Upload File"}
+                </button>
+              </div>
+            </form>
+
+            <section className="card filesCard">
+              <div className="sectionTitleRow">
+                <h2>Files</h2>
+                <button type="button" onClick={handleListFiles} disabled={isListing}>
+                  {isListing ? "Loading..." : "Refresh Files"}
+                </button>
+              </div>
+
+              {files.length > 0 ? (
+                <div className="tableWrap">
+                  <table className="filesTable">
+                    <thead>
+                      <tr>
+                        <th>File Name</th>
+                        <th>File ID</th>
+                        <th className="actionColumn">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {files.map((file) => {
+                        const fileId = file.fileId || file._id || "";
+                        const fileName = file.fileName || "Unnamed file";
+
+                        return (
+                          <tr key={fileId || fileName}>
+                            <td className="fileNameCell">{fileName}</td>
+                            <td className="fileIdCell">{fileId || "No fileId in payload"}</td>
+                            <td className="actionColumn">
+                              {fileId ? (
+                                <button
+                                  type="button"
+                                  className="secondary"
+                                  onClick={() => handleDownloadFile(fileId)}
+                                  disabled={isDownloading}
+                                >
+                                  Download
+                                </button>
+                              ) : (
+                                <span className="mutedText">Unavailable</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="mutedText">No files loaded yet. Click "Refresh Files" to fetch data.</p>
+              )}
+            </section>
+
+            <section className="card quickDownloadCard">
+              <h2>Direct Download by File ID</h2>
+              <label>
+                File ID
+                <input
+                  value={downloadFileId}
+                  onChange={(event) => setDownloadFileId(event.target.value)}
+                  placeholder="paste fileId here"
+                />
+              </label>
+              <div className="buttonRow">
+                <button
+                  type="button"
+                  onClick={() => handleDownloadFile()}
+                  disabled={isDownloading}
+                >
+                  {isDownloading ? "Downloading..." : "Download"}
+                </button>
+              </div>
+            </section>
+          </>
+        ) : (
+          renderSystemDashboardView()
+        )}
         {statusMessage && <p className="status">{statusMessage}</p>}
       </div>
     );
